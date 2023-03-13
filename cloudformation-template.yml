@@ -1,145 +1,123 @@
----
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Create a 3-tier Architecture
 Parameters:
   VpcCidr:
     Type: String
+    Description: CIDR block for the VPC
     Default: 10.0.0.0/16
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock:
-        Ref: VpcCidr
+      CidrBlock: !Ref VpcCidr
       EnableDnsSupport: true
       EnableDnsHostnames: true
+    
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
       CidrBlock: 10.0.1.0/24
       AvailabilityZone: us-east-1a
       MapPublicIpOnLaunch: true
+      
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
       AvailabilityZone: us-east-1b
       MapPublicIpOnLaunch: true
+      
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
       CidrBlock: 10.0.3.0/24
       AvailabilityZone: us-east-1a
+      
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
       CidrBlock: 10.0.4.0/24
       AvailabilityZone: us-east-1b
+      
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
+        
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
+        
   PublicSubnetRouteTableAssociation1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId:
-        Ref: PublicSubnet1
-      RouteTableId:
-        Ref: PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+        
   PublicSubnetRouteTableAssociation2:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId:
-        Ref: PublicSubnet2
-      RouteTableId:
-        Ref: PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+        
   PrivateSubnetRouteTableAssociation1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId:
-        Ref: PrivateSubnet1
-      RouteTableId:
-        Ref: PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+        
   PrivateSubnetRouteTableAssociation2:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId:
-        Ref: PrivateSubnet2
-      RouteTableId:
-        Ref: PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+        
   EC2WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: EC2 Web Server Security Group
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: "80"
           ToPort: "80"
           CidrIp: 0.0.0.0/0
+          
   EC2ApplicationServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: EC2 Application Server Security Group
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: "80"
           ToPort: "80"
-          SourceSecurityGroupId:
-            Ref: EC2WebServerSecurityGroup
+          SourceSecurityGroupId: !Ref EC2WebServerSecurityGroup
+            
   ASGWebTier:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
-        - Ref: PublicSubnet1
-        - Ref: PublicSubnet2
-      LaunchConfigurationName:
-        Ref: LaunchConfigWebTier
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      LaunchConfigurationName: !Ref LaunchConfigWebTier
       MinSize: "2"
       MaxSize: "2"
+      
   LaunchConfigWebTier:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId:
-        Ref: ami-005f9685cb30f234b
+      ImageId: ami-005f9685cb30f234b # replace with actual AMI ID
       InstanceType: t2.micro
       SecurityGroups:
-        - Ref: EC2WebServerSecurityGroup
-  ASGAppTier:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      VPCZoneIdentifier:
-        - Ref: PrivateSubnet1
-        - Ref: PrivateSubnet2
-      LaunchConfigurationName:
-        Ref: LaunchConfigAppTier
-      MinSize: "2"
-      MaxSize: "2"
-  LaunchConfigAppTier:
-    Type: AWS::AutoScaling::LaunchConfiguration
-    Properties:
-      ImageId:
-        Ref: ImageId
-      InstanceType: t2.micro
-      SecurityGroups:
-        - Ref: EC2ApplicationServerSecurityGroup
+        - !Ref EC2ApplicationServerSecurityGroup
+    
 Outputs:
   VPCId:
     Description: VPC Id
