@@ -117,6 +117,13 @@ Resources:
       InstanceType: t2.micro
       SecurityGroups:
         - !Ref EC2ApplicationServerSecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          aws s3 cp s3://codebild-beta/hello.html /var/www/html/
+          service httpd start || service apache2 start
+          chkconfig httpd on || chkconfig apache2 on
+
     
 Outputs:
   VPCId:
