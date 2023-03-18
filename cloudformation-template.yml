@@ -120,7 +120,7 @@ Resources:
       UserData:
         Fn::Base64: |
           #!/bin/bash
-          aws s3 cp s3://codebild-beta/hello.html /var/www/html/
+          aws s3 cp hello.html s3://codebuild-beta/hello.html --acl public-read /var/www/html/
           service httpd start || service apache2 start
           chkconfig httpd on || chkconfig apache2 on
 
